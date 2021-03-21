@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Windows.Forms;
@@ -11,6 +12,7 @@ namespace WindowsFormsApp1
         private delegate void KeyUpCallback();
         private int _delayTime = 500; // načtení návrhů je zpožděno o počet milisekund určených touto vlastností
         private Keys _posledniStisknutaKlavesa;
+        private Dictionary<string, string> _firmy = new Dictionary<string, string>();
 
         public ComboboxSuggest()
         {
@@ -53,6 +55,11 @@ namespace WindowsFormsApp1
                 cbo.Text = cboText;
                 cbo.SelectionStart = cboText.Length; // vrátíme kurzor zpět, kde byl
 
+                if (_firmy.ContainsKey(cboText))
+                    txtKod.Text = _firmy[cboText];
+                else
+                    txtKod.Text = string.Empty;
+
                 if (cbo.Items.Count == 1)
                     cbo.DroppedDown = false;
 
@@ -90,11 +97,12 @@ namespace WindowsFormsApp1
             lock (_locker)
             {
                 comboBox1.Items.Clear();
+                _firmy.Clear();
 
                 string connStr = ConfigurationManager.ConnectionStrings["WindowsFormsApp1.Properties.Settings.Myconn"].ConnectionString;
                 using (var conn = new SqlConnection(connStr))
                 {
-                    string sql = "SELECT TOP 100 nazev FROM Firmy WHERE nazev LIKE @zacatek+'%' ORDER BY nazev";
+                    string sql = "SELECT TOP 100 naz_obch, kod = convert(varchar, id) FROM cisa WHERE naz_obch LIKE @zacatek+'%' ORDER BY naz_obch";
                     using (var comm = new SqlCommand(sql,
                                                      conn))
                     {
@@ -105,7 +113,11 @@ namespace WindowsFormsApp1
                         var reader = comm.ExecuteReader();
                         while (reader.Read())
                         {
-                            comboBox1.Items.Add(reader["nazev"].ToString());
+                            string nazev = reader["naz_obch"].ToString();
+                            string kod = reader["kod"].ToString();
+                            _firmy.Add(nazev, kod);
+
+                            comboBox1.Items.Add(nazev);
                         }
                     }
 
