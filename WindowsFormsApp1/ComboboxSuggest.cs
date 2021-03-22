@@ -38,12 +38,11 @@ namespace WindowsFormsApp1
 
         private void KeyUp_Akce()
         {
+            var cbo = comboBox1;
+            cbo.KeyUp -= comboBox1_KeyUp;
+            var cboText = cbo.Text;
             try
             {
-                var cbo = comboBox1;
-                cbo.KeyUp -= comboBox1_KeyUp;
-                var cboText = cbo.Text;
-
                 NactiNavrhy(cboText);
 
                 // zobrazit uživateli nově odfiltrovaný seznam
@@ -62,10 +61,12 @@ namespace WindowsFormsApp1
 
                 if (cbo.Items.Count == 1)
                     cbo.DroppedDown = false;
-
-                cbo.KeyUp += comboBox1_KeyUp;
             }
             catch { }
+            finally
+            {
+                cbo.KeyUp += comboBox1_KeyUp;
+            }
         }
 
         private void comboBox1_KeyUp(object sender, KeyEventArgs e)
@@ -77,6 +78,8 @@ namespace WindowsFormsApp1
                 || e.KeyCode == Keys.Up
                 || e.KeyCode == Keys.Left
                 || e.KeyCode == Keys.Right
+                || e.KeyCode == Keys.Home
+                || e.KeyCode == Keys.End
                 || e.Control)
                 return;
 
@@ -130,6 +133,14 @@ namespace WindowsFormsApp1
         {
             _keypressTimer.Elapsed -= OnTimedEvent;
             comboBox1.KeyUp -= comboBox1_KeyUp;
+        }
+
+        private void comboBox1_Leave(object sender, EventArgs e)
+        {
+            if (_firmy.ContainsKey(comboBox1.Text))
+                txtKod.Text = _firmy[comboBox1.Text];
+            else
+                txtKod.Text = string.Empty;
         }
     }
 }
